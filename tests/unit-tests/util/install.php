@@ -1,4 +1,9 @@
 <?php
+/**
+ * Installer tests.
+ *
+ * @package WooCommerce\Tests\Util
+ */
 
 /**
  * Class WC_Tests_Install.
@@ -51,7 +56,7 @@ class WC_Tests_Install extends WC_Unit_Test_Case {
 	 * Test - create pages.
 	 */
 	public function test_create_pages() {
-		// Clear options
+		// Clear options.
 		delete_option( 'woocommerce_shop_page_id' );
 		delete_option( 'woocommerce_cart_page_id' );
 		delete_option( 'woocommerce_checkout_page_id' );
@@ -64,13 +69,13 @@ class WC_Tests_Install extends WC_Unit_Test_Case {
 		$this->assertGreaterThan( 0, get_option( 'woocommerce_checkout_page_id' ) );
 		$this->assertGreaterThan( 0, get_option( 'woocommerce_myaccount_page_id' ) );
 
-		// Delete pages
+		// Delete pages.
 		wp_delete_post( get_option( 'woocommerce_shop_page_id' ), true );
 		wp_delete_post( get_option( 'woocommerce_cart_page_id' ), true );
 		wp_delete_post( get_option( 'woocommerce_checkout_page_id' ), true );
 		wp_delete_post( get_option( 'woocommerce_myaccount_page_id' ), true );
 
-		// Clear options
+		// Clear options.
 		delete_option( 'woocommerce_shop_page_id' );
 		delete_option( 'woocommerce_cart_page_id' );
 		delete_option( 'woocommerce_checkout_page_id' );
@@ -88,7 +93,7 @@ class WC_Tests_Install extends WC_Unit_Test_Case {
 	 * Test - create roles.
 	 */
 	public function test_create_roles() {
-		// Clean existing install first
+		// Clean existing install first.
 		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 			define( 'WP_UNINSTALL_PLUGIN', true );
 			define( 'WC_REMOVE_ALL_DATA', true );
@@ -125,9 +130,26 @@ class WC_Tests_Install extends WC_Unit_Test_Case {
 			"SHOW TABLES WHERE `Tables_in_{$wpdb->dbname}` LIKE '{$wpdb->prefix}woocommerce\_%' OR `Tables_in_{$wpdb->dbname}` LIKE '{$wpdb->prefix}wc\_%'"
 		);
 		$result = WC_Install::get_tables();
+
+		sort( $tables );
 		sort( $result );
 
-		$this->assertEquals( $tables, $result );
+		// Exclude tables from feature plugins.
+		$tables = array_diff(
+			$tables,
+			array(
+				$wpdb->prefix . 'wc_admin_note_actions',
+				$wpdb->prefix . 'wc_admin_notes',
+				$wpdb->prefix . 'wc_category_lookup',
+				$wpdb->prefix . 'wc_customer_lookup',
+				$wpdb->prefix . 'wc_order_coupon_lookup',
+				$wpdb->prefix . 'wc_order_product_lookup',
+				$wpdb->prefix . 'wc_order_stats',
+				$wpdb->prefix . 'wc_order_tax_lookup',
+			)
+		);
+
+		$this->assertEquals( array_values( $tables ), array_values( $result ) );
 	}
 
 	/**
@@ -144,6 +166,8 @@ class WC_Tests_Install extends WC_Unit_Test_Case {
 
 	/**
 	 * Filter callback for test_get_tables_enables_filter().
+	 *
+	 * @param array $tables List of tables.
 	 */
 	public function append_table_to_get_tables( $tables ) {
 		$tables[] = 'some_table_name';
